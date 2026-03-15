@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { DayPicker } from 'react-day-picker'
 import 'react-day-picker/style.css'
 
+const POPOVER_HEIGHT = 340
+
 function parseLocalDate(dateString) {
   if (!dateString) return undefined
   const [year, month, day] = dateString.split('-').map(Number)
@@ -23,6 +25,7 @@ function formatDisplay(date) {
 
 export function DatePicker({ value, onChange, placeholder = 'Pick a date' }) {
   const [isOpen, setIsOpen] = useState(false)
+  const [openAbove, setOpenAbove] = useState(false)
   const rootRef = useRef(null)
   const selected = parseLocalDate(value)
 
@@ -40,6 +43,18 @@ export function DatePicker({ value, onChange, placeholder = 'Pick a date' }) {
     onChange(toDateString(date ?? null))
     if (date) setIsOpen(false)
   }
+
+  useEffect(() => {
+    if (!isOpen || !rootRef.current) {
+      return
+    }
+
+    const rect = rootRef.current.getBoundingClientRect()
+    const spaceBelow = window.innerHeight - rect.bottom
+    const spaceAbove = rect.top
+
+    setOpenAbove(spaceBelow < POPOVER_HEIGHT && spaceAbove > spaceBelow)
+  }, [isOpen])
 
   const handleClear = (event) => {
     event.stopPropagation()
@@ -75,7 +90,11 @@ export function DatePicker({ value, onChange, placeholder = 'Pick a date' }) {
       </button>
 
       {isOpen ? (
-        <div className="date-picker-popover" role="dialog" aria-label="Date picker">
+        <div
+          className={`date-picker-popover ${openAbove ? 'date-picker-popover--above' : ''}`}
+          role="dialog"
+          aria-label="Date picker"
+        >
           <DayPicker
             mode="single"
             selected={selected}

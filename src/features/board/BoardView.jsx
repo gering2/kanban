@@ -161,21 +161,6 @@ function getTaskDragIntent(event, boardState) {
     return null
   }
 
-  if (sourceColumn.id !== targetColumn.id) {
-    const targetIndex = getCrossColumnTargetIndex(
-      targetColumn.id,
-      targetColumn.taskIds,
-      activeCenter.y,
-    )
-
-    return {
-      sourceColumnId: sourceColumn.id,
-      targetColumnId: targetColumn.id,
-      targetIndex,
-      isCrossColumn: true,
-    }
-  }
-
   if (overIsColumn) {
     return {
       sourceColumnId: sourceColumn.id,
@@ -201,7 +186,14 @@ function getTaskDragIntent(event, boardState) {
   }
 }
 
-export function BoardView({ boardState, onMoveTask, onMoveColumn, onAddTask, onEditTask }) {
+export function BoardView({
+  boardState,
+  onMoveTask,
+  onMoveColumn,
+  onAddTask,
+  onDeleteColumn,
+  onEditTask,
+}) {
   const [activeTask, setActiveTask] = useState(null)
   const [activeColumn, setActiveColumn] = useState(null)
   const [taskDropPreview, setTaskDropPreview] = useState(null)
@@ -287,21 +279,24 @@ export function BoardView({ boardState, onMoveTask, onMoveColumn, onAddTask, onE
         items={orderedColumns.map((c) => c.id)}
         strategy={horizontalListSortingStrategy}
       >
-        <div className="flex gap-4 overflow-x-auto pb-2">
-          {orderedColumns.map((column) => (
-            <Column
-              key={column.id}
-              column={column}
-              tasks={selectTasksByColumnId(boardState, column.id)}
-              isTaskTargeted={taskDropPreview?.columnId === column.id}
-              insertionIndex={
-                taskDropPreview?.columnId === column.id ? taskDropPreview.index : null
-              }
-              onAddTask={onAddTask}
-              onEditTask={onEditTask}
-            />
-          ))}
-        </div>
+        <section className="board-shell">
+          <div className="board-lanes">
+            {orderedColumns.map((column) => (
+              <Column
+                key={column.id}
+                column={column}
+                tasks={selectTasksByColumnId(boardState, column.id)}
+                isTaskTargeted={taskDropPreview?.columnId === column.id}
+                insertionIndex={
+                  taskDropPreview?.columnId === column.id ? taskDropPreview.index : null
+                }
+                onAddTask={onAddTask}
+                onDeleteColumn={boardState.board.columnOrder.length > 1 ? onDeleteColumn : null}
+                onEditTask={onEditTask}
+              />
+            ))}
+          </div>
+        </section>
       </SortableContext>
       <DragOverlay dropAnimation={null}>
         {activeTask ? <TaskCard task={activeTask} isOverlay /> : null}

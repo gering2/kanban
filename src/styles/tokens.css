@@ -21,9 +21,36 @@
   --shadow-card: 0 12px 26px rgba(31, 43, 51, 0.08);
   --shadow-control: 0 4px 12px rgba(31, 43, 51, 0.07);
   --shadow-modal: 0 20px 50px rgba(31, 43, 51, 0.18);
+  --scrollbar-thumb: color-mix(in srgb, #c8b49a 72%, var(--surface-soft) 28%);
+  --scrollbar-thumb-hover: color-mix(in srgb, #b79b79 80%, var(--surface-muted) 20%);
+  --scrollbar-track: color-mix(in srgb, var(--surface-muted) 55%, transparent);
 }
 
 @layer base {
+  html,
+  body {
+    overflow-x: hidden;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  }
+
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: var(--radius-pill);
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+  }
+
+  *::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+  }
+
   body {
     font-family: var(--font-body);
     color: var(--text);
@@ -124,40 +151,152 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-card);
-    box-shadow: var(--shadow-card);
+    box-shadow:
+      0 4px 10px rgba(31, 43, 51, 0.055),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+  }
+
+  .task-card:hover {
+    border-color: color-mix(in srgb, var(--border-strong) 82%, var(--border) 18%);
+    box-shadow:
+      0 8px 16px rgba(31, 43, 51, 0.075),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    transform: translateY(-1px);
+  }
+
+  .task-card:focus-within {
+    border-color: color-mix(in srgb, var(--brand) 24%, var(--border-strong) 76%);
+    box-shadow:
+      0 7px 14px rgba(31, 43, 51, 0.07),
+      0 0 0 2px color-mix(in srgb, var(--brand-soft) 40%, transparent);
   }
 
   .task-insert-indicator {
-    position: relative;
-    height: 0;
-    margin: 0;
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 6px;
     pointer-events: none;
+    z-index: 2;
+    overflow: hidden;
   }
 
   .task-insert-indicator::before {
     content: '';
     position: absolute;
-    left: 4px;
-    right: 4px;
-    top: -3px;
-    height: 6px;
+    left: 14px;
+    right: 14px;
+    top: 2px;
+    height: 1px;
     border-radius: var(--radius-pill);
-    background: linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--brand) 42%, white 58%),
-      color-mix(in srgb, var(--brand) 56%, white 44%),
-      color-mix(in srgb, var(--brand) 42%, white 58%)
-    );
-    box-shadow:
-      0 0 0 2px color-mix(in srgb, var(--brand-soft) 58%, transparent),
-      0 6px 14px color-mix(in srgb, var(--brand-soft) 42%, transparent);
-    opacity: 0.9;
+    background: color-mix(in srgb, var(--text-soft) 62%, var(--border-strong) 38%);
+    box-shadow: none;
+    opacity: 0.82;
+  }
+
+  .task-insert-indicator::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 5px;
+    height: 5px;
+    transform: translateX(-50%) rotate(45deg);
+    border-radius: 1px;
+    border: 1px solid color-mix(in srgb, var(--text-soft) 65%, var(--brand) 35%);
+    background: color-mix(in srgb, var(--surface) 82%, white 18%);
   }
 
   .kanban-column {
-    @apply flex h-full min-h-[20rem] w-[19rem] flex-shrink-0 flex-col p-4 transition;
+    @apply flex h-full min-h-[21.5rem] w-[20.5rem] flex-shrink-0 flex-col p-5 transition;
     border-radius: var(--radius-card);
     border: 1px solid var(--border);
+    max-height: calc(100vh - 12.5rem);
+    overflow: hidden;
+    box-shadow: 0 10px 22px rgba(31, 43, 51, 0.05);
+  }
+
+  .board-shell {
+    border: 1px solid color-mix(in srgb, var(--border) 88%, white 12%);
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--surface-soft) 92%, white 8%), var(--surface-soft));
+    border-radius: calc(var(--radius-card) + 6px);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.48),
+      0 16px 34px rgba(31, 43, 51, 0.06);
+    padding: 14px;
+  }
+
+  .board-lanes {
+    @apply flex gap-5;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 6px 4px 12px;
+    scroll-padding-inline: 4px;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    -ms-overflow-style: none;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+  }
+
+  .board-lanes::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  .board-lanes::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: var(--radius-pill);
+  }
+
+  .board-lanes:hover::-webkit-scrollbar-thumb,
+  .board-lanes:focus-within::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb-hover);
+  }
+
+  .board-lanes::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+    border-radius: var(--radius-pill);
+  }
+
+  .board-lanes:hover,
+  .board-lanes:focus-within {
+    scrollbar-color: var(--scrollbar-thumb-hover) var(--scrollbar-track);
+  }
+
+  .task-list {
+    @apply relative flex min-h-[4rem] flex-1 flex-col gap-3.5 pr-1;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    -ms-overflow-style: none;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+  }
+
+  .task-list::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .task-list::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: var(--radius-pill);
+  }
+
+  .task-list:hover::-webkit-scrollbar-thumb,
+  .task-list:focus-within::-webkit-scrollbar-thumb,
+  .task-list.task-list-scrolling::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+  }
+
+  .task-list::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+    border-radius: var(--radius-pill);
+  }
+
+  .task-list:hover,
+  .task-list:focus-within,
+  .task-list.task-list-scrolling {
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
   }
 
   .kanban-column-idle {
@@ -193,6 +332,7 @@
   .card-copy {
     @apply mt-2 text-sm;
     color: var(--text-muted);
+    line-height: 1.45;
   }
 
   .card-meta {
@@ -200,18 +340,124 @@
     color: var(--text-soft);
   }
 
+  .priority-pill {
+    @apply inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em];
+    background: transparent;
+    gap: 6px;
+  }
+
+  .priority-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: currentColor;
+    display: inline-block;
+  }
+
+  .priority-pill.priority-pill-low {
+    color: #2e8d44;
+  }
+
+  .priority-pill.priority-pill-medium {
+    color: #b08500;
+  }
+
+  .priority-pill.priority-pill-high {
+    color: #c43c32;
+  }
+
+  .brand-mark {
+    display: grid;
+    grid-template-columns: repeat(2, 10px);
+    grid-template-rows: repeat(2, 10px);
+    gap: 4px;
+    width: max-content;
+    padding: 8px;
+    background: color-mix(in srgb, var(--surface) 86%, white 14%);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow-control);
+  }
+
+  .brand-mark-tile {
+    display: block;
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    background: linear-gradient(180deg, var(--brand), var(--brand-strong));
+  }
+
+  .brand-mark-tile-1 {
+    opacity: 0.98;
+  }
+
+  .brand-mark-tile-2 {
+    opacity: 0.78;
+  }
+
+  .brand-mark-tile-3 {
+    opacity: 0.72;
+  }
+
+  .brand-mark-tile-4 {
+    opacity: 0.94;
+  }
+
+  .add-task-trigger {
+    @apply flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition;
+    color: var(--text-muted);
+    background: color-mix(in srgb, var(--surface) 62%, transparent);
+    border: 1px dashed color-mix(in srgb, var(--border-strong) 72%, transparent);
+  }
+
+  .add-task-trigger-icon {
+    @apply inline-flex h-4 w-4 items-center justify-center rounded-full text-xs font-semibold;
+    color: var(--text-muted);
+    background: color-mix(in srgb, var(--surface-muted) 62%, transparent);
+    line-height: 1;
+  }
+
+  .add-task-trigger:hover {
+    color: var(--text);
+    background: color-mix(in srgb, var(--surface) 78%, transparent);
+    border-color: color-mix(in srgb, var(--border-strong) 88%, transparent);
+  }
+
+  .add-task-trigger:hover .add-task-trigger-icon {
+    color: var(--text);
+    background: color-mix(in srgb, var(--surface-muted) 88%, transparent);
+  }
+
   .icon-button,
   .drag-handle {
     @apply inline-flex h-8 w-8 items-center justify-center transition;
-    color: var(--text-soft);
+    color: color-mix(in srgb, var(--text-soft) 88%, var(--text-muted) 12%);
     background: transparent;
     border-radius: calc(var(--radius-control) - 2px);
+    opacity: 0.72;
   }
 
   .icon-button:hover,
   .drag-handle:hover {
     color: var(--text);
     background: var(--surface-muted);
+    opacity: 1;
+  }
+
+  .kanban-column .column-delete-action {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .kanban-column:hover .column-delete-action,
+  .kanban-column:focus-within .column-delete-action {
+    opacity: 0.78;
+    pointer-events: auto;
+  }
+
+  .kanban-column:hover .column-delete-action:hover,
+  .kanban-column:focus-within .column-delete-action:hover {
+    opacity: 1;
   }
 
   .drag-handle {
@@ -337,6 +583,11 @@
     border-radius: var(--radius-card);
     box-shadow: var(--shadow-modal);
     overflow: hidden;
+  }
+
+  .date-picker-popover--above {
+    top: auto;
+    bottom: calc(100% + 6px);
   }
 
   /* react-day-picker v9 CSS variable overrides */

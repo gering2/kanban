@@ -4,6 +4,18 @@ import { DragDots } from '../../components/ui/DragDots'
 import { formatShortDate } from '../../lib/dates'
 
 export function TaskCard({ task, isOverlay = false }) {
+  const priority = task.priority ?? 'medium'
+  const priorityLabel = {
+    low: 'Easy',
+    medium: 'Med',
+    high: 'Hard',
+  }
+  const priorityColor = {
+    low: '#2e8d44',
+    medium: '#b08500',
+    high: '#c43c32',
+  }
+
   const {
     attributes,
     listeners,
@@ -27,7 +39,9 @@ export function TaskCard({ task, isOverlay = false }) {
       className={`task-card ${isDragging && !isOverlay ? 'opacity-40' : ''}`}
     >
       <div className="flex items-start justify-between gap-3">
-        <h3 className="card-title">{task.title}</h3>
+        <div className="min-w-0 flex-1">
+          <h3 className="card-title">{task.title}</h3>
+        </div>
         {!isOverlay ? (
           <div className="flex items-center gap-2">
             <button
@@ -57,7 +71,14 @@ export function TaskCard({ task, isOverlay = false }) {
       {task.description ? (
         <p className="card-copy">{task.description}</p>
       ) : null}
-      <div className="mt-3">
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <span
+          className={`priority-pill priority-pill-${priority}`}
+          style={{ color: priorityColor[priority] ?? priorityColor.medium }}
+        >
+          <span className="priority-dot" aria-hidden="true" />
+          {priorityLabel[priority] ?? 'Medium'}
+        </span>
         <span className="card-meta">
           {task.dueDate ? `Due ${formatShortDate(task.dueDate)}` : 'No due date'}
         </span>

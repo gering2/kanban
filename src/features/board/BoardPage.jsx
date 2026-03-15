@@ -5,10 +5,12 @@ import {
   addColumn,
   addTask,
   createInitialBoardState,
+  deleteColumn,
   moveColumn,
   moveTask,
   updateTask,
 } from './boardStore'
+import { BrandMark } from '../../components/ui/BrandMark'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { DatePicker } from '../../components/ui/DatePicker'
@@ -21,11 +23,25 @@ export function BoardPage() {
   const initialState = useMemo(() => createInitialBoardState(), [])
   const [boardState, setBoardState] = useLocalStorage(BOARD_STORAGE_KEY, initialState)
   const [editingTaskId, setEditingTaskId] = useState(null)
+  const [creatingTaskColumnId, setCreatingTaskColumnId] = useState(null)
+  const [deletingColumnId, setDeletingColumnId] = useState(null)
   const editingTask = editingTaskId ? boardState.tasks[editingTaskId] : null
-  const [taskDraft, setTaskDraft] = useState({ title: '', description: '', dueDate: '' })
+  const deletingColumn = deletingColumnId ? boardState.columns[deletingColumnId] : null
+  const [taskDraft, setTaskDraft] = useState({
+    title: '',
+    description: '',
+    dueDate: '',
+    priority: 'medium',
+  })
 
-  const handleAddTask = (columnId, title) => {
-    setBoardState((currentState) => addTask(currentState, columnId, title))
+  const handleOpenCreateTask = (columnId) => {
+    setCreatingTaskColumnId(columnId)
+    setTaskDraft({
+      title: '',
+      description: '',
+      dueDate: '',
+      priority: 'medium',
+    })
   }
 
   const handleAddColumn = (title) => {
@@ -42,6 +58,23 @@ export function BoardPage() {
     setBoardState((currentState) => moveColumn(currentState, sourceColumnId, targetColumnId))
   }
 
+  const handleOpenDeleteColumn = (columnId) => {
+    setDeletingColumnId(columnId)
+  }
+
+  const handleCloseDeleteColumn = () => {
+    setDeletingColumnId(null)
+  }
+
+  const handleDeleteColumn = () => {
+    if (!deletingColumnId) {
+      return
+    }
+
+    setBoardState((currentState) => deleteColumn(currentState, deletingColumnId))
+    handleCloseDeleteColumn()
+  }
+
   const handleOpenEditTask = (taskId) => {
     const task = boardState.tasks[taskId]
 
@@ -54,12 +87,28 @@ export function BoardPage() {
       title: task.title,
       description: task.description,
       dueDate: task.dueDate ? task.dueDate.slice(0, 10) : '',
+      priority: task.priority ?? 'medium',
     })
   }
 
   const handleCloseEditTask = () => {
     setEditingTaskId(null)
-    setTaskDraft({ title: '', description: '', dueDate: '' })
+    setTaskDraft({
+      title: '',
+      description: '',
+      dueDate: '',
+      priority: 'medium',
+    })
+  }
+
+  const handleCloseCreateTask = () => {
+    setCreatingTaskColumnId(null)
+    setTaskDraft({
+      title: '',
+      description: '',
+      dueDate: '',
+      priority: 'medium',
+    })
   }
 
   const handleSaveTask = (event) => {
@@ -74,21 +123,37 @@ export function BoardPage() {
         title: taskDraft.title,
         description: taskDraft.description,
         dueDate: taskDraft.dueDate || null,
+        priority: taskDraft.priority,
       }),
     )
 
     handleCloseEditTask()
   }
 
+  const handleCreateTask = (event) => {
+    event.preventDefault()
+
+    if (!creatingTaskColumnId) {
+      return
+    }
+
+    setBoardState((currentState) =>
+      addTask(currentState, creatingTaskColumnId, {
+        title: taskDraft.title,
+        description: taskDraft.description,
+        dueDate: taskDraft.dueDate || null,
+        priority: taskDraft.priority,
+      }),
+    )
+
+    handleCloseCreateTask()
+  }
+
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-[1200px] flex-col px-4 py-8 sm:px-6">
-      <header className="mb-6 space-y-2">
-        <p className="page-eyebrow">Project Structure</p>
+    <main className="mx-auto flex min-h-screen w-[min(96vw,1760px)] max-w-none flex-col px-3 py-8 sm:px-5">
+      <header className="mb-6 flex items-center gap-3">
+        <BrandMark />
         <h1 className="page-title">{boardState.board.title}</h1>
-        <p className="page-copy">
-          Feature-first layout is now active: board, column, and task logic are
-          split into focused modules with shared UI primitives.
-        </p>
       </header>
 
       <div className="mb-5">
@@ -99,9 +164,112 @@ export function BoardPage() {
         boardState={boardState}
         onMoveTask={handleMoveTask}
         onMoveColumn={handleMoveColumn}
-        onAddTask={handleAddTask}
+        onAddTask={handleOpenCreateTask}
+        onDeleteColumn={handleOpenDeleteColumn}
         onEditTask={handleOpenEditTask}
       />
+
+      <TaskModal
+        isOpen={Boolean(deletingColumn)}
+        onClose={handleCloseDeleteColumn}
+        title="Delete Column"
+        showCloseButton={false}
+      >
+        <div className="space-y-4">
+          <p className="page-copy max-w-none text-sm">
+            Delete {deletingColumn?.title}? All tasks in this column will be removed.
+          </p>
+          <div className="flex justify-end gap-3">
+            <button type="button" className="ghost-button" onClick={handleCloseDeleteColumn}>
+              Cancel
+            </button>
+            <Button type="button" onClick={handleDeleteColumn}>
+              Delete column
+            </Button>
+          </div>
+        </div>
+      </TaskModal>
+
+      <TaskModal
+        isOpen={Boolean(creatingTaskColumnId)}
+        onClose={handleCloseCreateTask}
+        title="New Task"
+      >
+        <form className="space-y-4" onSubmit={handleCreateTask}>
+          <div className="space-y-1.5">
+            <label className="field-label" htmlFor="create-task-title">
+              Title
+            </label>
+            <Input
+              id="create-task-title"
+              value={taskDraft.title}
+              onChange={(event) =>
+                setTaskDraft((currentDraft) => ({
+                  ...currentDraft,
+                  title: event.target.value,
+                }))
+              }
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="field-label" htmlFor="create-task-description">
+              Description
+            </label>
+            <textarea
+              id="create-task-description"
+              className="textarea"
+              value={taskDraft.description}
+              onChange={(event) =>
+                setTaskDraft((currentDraft) => ({
+                  ...currentDraft,
+                  description: event.target.value,
+                }))
+              }
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="field-label" htmlFor="create-task-due-date">
+              Due date
+            </label>
+            <DatePicker
+              value={taskDraft.dueDate}
+              onChange={(dateString) =>
+                setTaskDraft((currentDraft) => ({
+                  ...currentDraft,
+                  dueDate: dateString,
+                }))
+              }
+              placeholder="Pick a due date"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="field-label" htmlFor="create-task-priority">
+              Priority
+            </label>
+            <select
+              id="create-task-priority"
+              className="input"
+              value={taskDraft.priority}
+              onChange={(event) =>
+                setTaskDraft((currentDraft) => ({
+                  ...currentDraft,
+                  priority: event.target.value,
+                }))
+              }
+            >
+              <option value="low">Easy</option>
+              <option value="medium">Med</option>
+              <option value="high">Hard</option>
+            </select>
+          </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" className="ghost-button" onClick={handleCloseCreateTask}>
+              Cancel
+            </button>
+            <Button type="submit">Create task</Button>
+          </div>
+        </form>
+      </TaskModal>
 
       <TaskModal
         isOpen={Boolean(editingTask)}
@@ -154,6 +322,26 @@ export function BoardPage() {
               }
               placeholder="Pick a due date"
             />
+          </div>
+          <div className="space-y-1.5">
+            <label className="field-label" htmlFor="task-priority">
+              Priority
+            </label>
+            <select
+              id="task-priority"
+              className="input"
+              value={taskDraft.priority}
+              onChange={(event) =>
+                setTaskDraft((currentDraft) => ({
+                  ...currentDraft,
+                  priority: event.target.value,
+                }))
+              }
+            >
+              <option value="low">Easy</option>
+              <option value="medium">Med</option>
+              <option value="high">Hard</option>
+            </select>
           </div>
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" className="ghost-button" onClick={handleCloseEditTask}>

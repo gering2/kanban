@@ -1,16 +1,8 @@
-import { Input } from '../../components/ui/Input'
-import { Button } from '../../components/ui/Button'
-
-export function TaskForm({ value, onChange, onSubmit, submitLabel = 'Add task' }) {
+export function TaskForm({ onOpen }) {
   return (
-    <form className="mt-3 flex gap-2" onSubmit={onSubmit}>
-      <Input
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        placeholder="Write task title..."
-        aria-label="Task title"
-      />
-      <Button type="submit">{submitLabel}</Button>
-    </form>
+    <button type="button" className="add-task-trigger mt-3" onClick={onOpen}>
+      <span className="add-task-trigger-icon" aria-hidden="true">+</span>
+      <span>Add task</span>
+    </button>
   )
 }

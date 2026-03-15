@@ -1,5 +1,11 @@
 import { createId } from '../../lib/ids'
 
+const TASK_PRIORITIES = ['low', 'medium', 'high']
+
+function normalizePriority(priority) {
+  return TASK_PRIORITIES.includes(priority) ? priority : 'medium'
+}
+
 export function createInitialBoardState() {
   return {
     board: {
@@ -30,30 +36,37 @@ export function createInitialBoardState() {
         title: 'Map board data model',
         description: 'Define entities for board, columns, and tasks.',
         dueDate: null,
+        priority: 'high',
       },
       'task-2': {
         id: 'task-2',
         title: 'Draft MVP task actions',
         description: 'Add, edit, delete, and move card actions.',
         dueDate: null,
+        priority: 'medium',
       },
       'task-3': {
         id: 'task-3',
         title: 'Set up project architecture',
         description: 'Switch from Vite starter to feature-first layout.',
         dueDate: new Date().toISOString(),
+        priority: 'low',
       },
     },
   }
 }
 
-export function addTask(state, columnId, title) {
-  const cleanTitle = title.trim()
+export function addTask(state, columnId, taskInput) {
+  const isStringInput = typeof taskInput === 'string'
+  const cleanTitle = isStringInput ? taskInput.trim() : taskInput?.title?.trim()
 
   if (!cleanTitle || !state.columns[columnId]) {
     return state
   }
 
+  const description = isStringInput ? '' : (taskInput.description ?? '')
+  const dueDate = isStringInput ? null : (taskInput.dueDate || null)
+  const priority = normalizePriority(isStringInput ? 'medium' : taskInput.priority)
   const taskId = createId('task')
 
   return {
@@ -63,8 +76,9 @@ export function addTask(state, columnId, title) {
       [taskId]: {
         id: taskId,
         title: cleanTitle,
-        description: '',
-        dueDate: null,
+        description,
+        dueDate,
+        priority,
       },
     },
     columns: {
@@ -126,6 +140,7 @@ export function updateTask(state, taskId, updates) {
         title: nextTitle,
         description: updates.description ?? currentTask.description,
         dueDate: updates.dueDate ?? currentTask.dueDate,
+        priority: normalizePriority(updates.priority ?? currentTask.priority),
       },
     },
   }
@@ -146,6 +161,31 @@ export function moveColumn(state, sourceColumnId, targetColumnId) {
   return {
     ...state,
     board: { ...state.board, columnOrder },
+  }
+}
+
+export function deleteColumn(state, columnId) {
+  if (!state.columns[columnId] || state.board.columnOrder.length <= 1) {
+    return state
+  }
+
+  const nextColumns = { ...state.columns }
+  const nextTasks = { ...state.tasks }
+
+  state.columns[columnId].taskIds.forEach((taskId) => {
+    delete nextTasks[taskId]
+  })
+
+  delete nextColumns[columnId]
+
+  return {
+    ...state,
+    board: {
+      ...state.board,
+      columnOrder: state.board.columnOrder.filter((id) => id !== columnId),
+    },
+    columns: nextColumns,
+    tasks: nextTasks,
   }
 }
 
