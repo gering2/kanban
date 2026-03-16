@@ -6,6 +6,7 @@ import {
   addTask,
   createInitialBoardState,
   deleteColumn,
+  deleteTask,
   moveColumn,
   moveTask,
   updateTask,
@@ -19,20 +20,100 @@ import { TaskModal } from '../task/TaskModal'
 
 const BOARD_STORAGE_KEY = 'kanban.board.v1'
 
+function parseLabelsInput(labelsInput) {
+  if (!labelsInput) {
+    return []
+  }
+
+  return labelsInput
+    .split(',')
+    .map((label) => label.trim())
+    .filter(Boolean)
+}
+
 export function BoardPage() {
   const initialState = useMemo(() => createInitialBoardState(), [])
   const [boardState, setBoardState] = useLocalStorage(BOARD_STORAGE_KEY, initialState)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [activeLabelFilter, setActiveLabelFilter] = useState('all')
   const [editingTaskId, setEditingTaskId] = useState(null)
   const [creatingTaskColumnId, setCreatingTaskColumnId] = useState(null)
   const [deletingColumnId, setDeletingColumnId] = useState(null)
+  const [deletingTaskId, setDeletingTaskId] = useState(null)
   const editingTask = editingTaskId ? boardState.tasks[editingTaskId] : null
   const deletingColumn = deletingColumnId ? boardState.columns[deletingColumnId] : null
+  const deletingTask = deletingTaskId ? boardState.tasks[deletingTaskId] : null
   const [taskDraft, setTaskDraft] = useState({
     title: '',
     description: '',
     dueDate: '',
     priority: 'medium',
+    labelsText: '',
   })
+
+  const availableLabels = useMemo(() => {
+    const labels = new Set()
+
+    Object.values(boardState.tasks).forEach((task) => {
+      if (!Array.isArray(task.labels)) {
+        return
+      }
+
+      task.labels.forEach((label) => {
+        if (label) {
+          labels.add(label)
+        }
+      })
+    })
+
+    return Array.from(labels).sort((a, b) => a.localeCompare(b))
+  }, [boardState.tasks])
+
+  const filteredBoardState = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase()
+    const hasQuery = query.length > 0
+    const useLabelFilter = activeLabelFilter !== 'all'
+
+    const nextColumns = Object.fromEntries(
+      Object.entries(boardState.columns).map(([columnId, column]) => {
+        const nextTaskIds = column.taskIds.filter((taskId) => {
+          const task = boardState.tasks[taskId]
+
+          if (!task) {
+            return false
+          }
+
+          const taskLabels = Array.isArray(task.labels) ? task.labels : []
+          const matchesLabel = !useLabelFilter || taskLabels.includes(activeLabelFilter)
+
+          if (!matchesLabel) {
+            return false
+          }
+
+          if (!hasQuery) {
+            return true
+          }
+
+          const haystack = `${task.title} ${task.description} ${taskLabels.join(' ')}`.toLowerCase()
+          return haystack.includes(query)
+        })
+
+        return [columnId, { ...boardState.columns[columnId], taskIds: nextTaskIds }]
+      }),
+    )
+
+    return {
+      ...boardState,
+      columns: nextColumns,
+    }
+  }, [boardState, searchQuery, activeLabelFilter])
+
+  const visibleTaskCount = useMemo(
+    () => Object.values(filteredBoardState.columns).reduce((sum, column) => sum + column.taskIds.length, 0),
+    [filteredBoardState.columns],
+  )
+
+  const totalTaskCount = Object.keys(boardState.tasks).length
 
   const handleOpenCreateTask = (columnId) => {
     setCreatingTaskColumnId(columnId)
@@ -41,6 +122,7 @@ export function BoardPage() {
       description: '',
       dueDate: '',
       priority: 'medium',
+      labelsText: '',
     })
   }
 
@@ -75,6 +157,20 @@ export function BoardPage() {
     handleCloseDeleteColumn()
   }
 
+  const handleOpenDeleteTask = (taskId) => {
+    setDeletingTaskId(taskId)
+  }
+
+  const handleCloseDeleteTask = () => {
+    setDeletingTaskId(null)
+  }
+
+  const handleDeleteTask = () => {
+    if (!deletingTaskId) return
+    setBoardState((currentState) => deleteTask(currentState, deletingTaskId))
+    handleCloseDeleteTask()
+  }
+
   const handleOpenEditTask = (taskId) => {
     const task = boardState.tasks[taskId]
 
@@ -88,7 +184,19 @@ export function BoardPage() {
       description: task.description,
       dueDate: task.dueDate ? task.dueDate.slice(0, 10) : '',
       priority: task.priority ?? 'medium',
+      labelsText: task.labels?.join(', ') ?? '',
     })
+  }
+
+  const handleEditColumn = (columnId, newColumnTitle) => {
+    const cleanTitle = newColumnTitle.trim();
+    if (!cleanTitle) return; // Prevent empty/whitespace-only titles
+    setBoardState((state) => {
+      const nextColumns = { ...state.columns };
+      if (!nextColumns[columnId]) return state;
+      nextColumns[columnId] = { ...nextColumns[columnId], title: cleanTitle };
+      return { ...state, columns: nextColumns };
+    });
   }
 
   const handleCloseEditTask = () => {
@@ -98,6 +206,7 @@ export function BoardPage() {
       description: '',
       dueDate: '',
       priority: 'medium',
+      labelsText: '',
     })
   }
 
@@ -108,6 +217,7 @@ export function BoardPage() {
       description: '',
       dueDate: '',
       priority: 'medium',
+      labelsText: '',
     })
   }
 
@@ -124,6 +234,7 @@ export function BoardPage() {
         description: taskDraft.description,
         dueDate: taskDraft.dueDate || null,
         priority: taskDraft.priority,
+        labels: parseLabelsInput(taskDraft.labelsText),
       }),
     )
 
@@ -143,6 +254,7 @@ export function BoardPage() {
         description: taskDraft.description,
         dueDate: taskDraft.dueDate || null,
         priority: taskDraft.priority,
+        labels: parseLabelsInput(taskDraft.labelsText),
       }),
     )
 
@@ -150,7 +262,7 @@ export function BoardPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-[min(96vw,1760px)] max-w-none flex-col px-3 py-8 sm:px-5">
+    <main className="mx-auto flex min-h-dvh w-[min(96vw,1760px)] max-w-none flex-col px-3 pb-20 pt-8 sm:px-5">
       <header className="mb-6 flex items-center gap-3">
         <BrandMark />
         <h1 className="page-title">{boardState.board.title}</h1>
@@ -160,14 +272,70 @@ export function BoardPage() {
         <AddColumnForm onAddColumn={handleAddColumn} />
       </div>
 
+      <section className="command-bar mb-5">
+        <div className="command-bar-search">
+          <Input
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Search tasks, descriptions, and labels"
+            aria-label="Search tasks"
+          />
+        </div>
+        <div className="command-bar-labels" role="group" aria-label="Filter tasks by label">
+          <button
+            type="button"
+            className={`label-filter-chip ${activeLabelFilter === 'all' ? 'label-filter-chip-active' : ''}`}
+            onClick={() => setActiveLabelFilter('all')}
+          >
+            All
+          </button>
+          {availableLabels.map((label) => (
+            <button
+              key={label}
+              type="button"
+              className={`label-filter-chip ${activeLabelFilter === label ? 'label-filter-chip-active' : ''}`}
+              onClick={() => setActiveLabelFilter(label)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <p className="command-bar-meta mr-5">
+          Showing {visibleTaskCount} of {totalTaskCount} tasks
+        </p>
+      </section>
+
       <BoardView
-        boardState={boardState}
+        boardState={filteredBoardState}
         onMoveTask={handleMoveTask}
         onMoveColumn={handleMoveColumn}
         onAddTask={handleOpenCreateTask}
         onDeleteColumn={handleOpenDeleteColumn}
         onEditTask={handleOpenEditTask}
+        onDeleteTask={handleOpenDeleteTask}
+        onEditColumn={handleEditColumn}
       />
+
+      <TaskModal
+        isOpen={Boolean(deletingTask)}
+        onClose={handleCloseDeleteTask}
+        title="Delete Task"
+        showCloseButton={false}
+      >
+        <div className="space-y-4">
+          <p className="page-copy max-w-none text-sm">
+            Delete &ldquo;{deletingTask?.title}&rdquo;? This cannot be undone.
+          </p>
+          <div className="flex justify-end gap-3">
+            <button type="button" className="ghost-button" onClick={handleCloseDeleteTask}>
+              Cancel
+            </button>
+            <Button type="button" onClick={handleDeleteTask}>
+              Delete task
+            </Button>
+          </div>
+        </div>
+      </TaskModal>
 
       <TaskModal
         isOpen={Boolean(deletingColumn)}
@@ -262,6 +430,22 @@ export function BoardPage() {
               <option value="high">Hard</option>
             </select>
           </div>
+          <div className="space-y-1.5">
+            <label className="field-label" htmlFor="create-task-labels">
+              Labels
+            </label>
+            <Input
+              id="create-task-labels"
+              value={taskDraft.labelsText}
+              onChange={(event) =>
+                setTaskDraft((currentDraft) => ({
+                  ...currentDraft,
+                  labelsText: event.target.value,
+                }))
+              }
+              placeholder="frontend, bug, sprint"
+            />
+          </div>
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" className="ghost-button" onClick={handleCloseCreateTask}>
               Cancel
@@ -342,6 +526,22 @@ export function BoardPage() {
               <option value="medium">Med</option>
               <option value="high">Hard</option>
             </select>
+          </div>
+          <div className="space-y-1.5">
+            <label className="field-label" htmlFor="task-labels">
+              Labels
+            </label>
+            <Input
+              id="task-labels"
+              value={taskDraft.labelsText}
+              onChange={(event) =>
+                setTaskDraft((currentDraft) => ({
+                  ...currentDraft,
+                  labelsText: event.target.value,
+                }))
+              }
+              placeholder="frontend, bug, sprint"
+            />
           </div>
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" className="ghost-button" onClick={handleCloseEditTask}>

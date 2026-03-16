@@ -6,15 +6,19 @@ import { DragDots } from '../../components/ui/DragDots'
 import { ColumnHeader } from './ColumnHeader'
 import { TaskForm } from '../task/TaskForm'
 import { TaskCard } from '../task/TaskCard'
+import { IconDelete } from '../../components/icons/IconDelete'
 
 export function Column({
   column,
+  columnIndex = 0,
   tasks,
   isTaskTargeted = false,
   insertionIndex = null,
   onAddTask,
   onDeleteColumn,
   onEditTask,
+  onDeleteTask,
+  onEditColumn
 }) {
   const indicatorBandHeight = 6
   const [indicatorTop, setIndicatorTop] = useState(null)
@@ -43,6 +47,7 @@ export function Column({
     transition,
   }
 
+  const toneClass = `kanban-column-tone-${(columnIndex % 4) + 1}`
   const showInsertionIndicator = tasks.length > 0 && indicatorTop !== null
 
   const handleTaskListScroll = () => {
@@ -117,9 +122,7 @@ export function Column({
       aria-label={`Delete ${column.title} column`}
       onClick={() => onDeleteColumn(column.id)}
     >
-      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M18 6 6 18M6 6l12 12" />
-      </svg>
+      <IconDelete className="h-4 w-4" />
     </button>
   ) : null
 
@@ -128,7 +131,7 @@ export function Column({
       ref={setSortableRef}
       style={style}
       data-column-id={column.id}
-      className={`kanban-column ${
+      className={`kanban-column ${toneClass} ${
         isTaskTargeted ? 'kanban-column-over' : 'kanban-column-idle'
       } ${isDragging ? 'opacity-50' : ''}`}
     >
@@ -137,6 +140,8 @@ export function Column({
         taskCount={tasks.length}
         dragHandle={dragHandle}
         deleteAction={deleteAction}
+        onEditColumn={onEditColumn}
+        id = {column.id}
       />
       <SortableContext
         items={tasks.map((t) => t.id)}
@@ -163,6 +168,7 @@ export function Column({
           {tasks.map((task) => (
             <div
               key={task.id}
+              className="task-slot"
               ref={(node) => {
                 if (node) {
                   taskItemRefs.current.set(task.id, node)
@@ -171,9 +177,15 @@ export function Column({
                 }
               }}
             >
-              <TaskCard task={{ ...task, onEdit: onEditTask }} />
+              <TaskCard task={{ ...task, onEdit: onEditTask, onDelete: onDeleteTask }} />
             </div>
           ))}
+          {tasks.length === 0 ? (
+            <div className="column-empty-state" role="status" aria-live="polite">
+              <p className="column-empty-title">No tasks yet</p>
+              <p className="column-empty-copy">Drop a card here or use Add task to start this lane.</p>
+            </div>
+          ) : null}
         </div>
       </SortableContext>
       <TaskForm

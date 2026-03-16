@@ -193,6 +193,8 @@ export function BoardView({
   onAddTask,
   onDeleteColumn,
   onEditTask,
+  onDeleteTask,
+  onEditColumn
 }) {
   const [activeTask, setActiveTask] = useState(null)
   const [activeColumn, setActiveColumn] = useState(null)
@@ -281,10 +283,11 @@ export function BoardView({
       >
         <section className="board-shell">
           <div className="board-lanes">
-            {orderedColumns.map((column) => (
+            {orderedColumns.map((column, columnIndex) => (
               <Column
                 key={column.id}
-                column={column}
+                column={{ ...column }}
+                columnIndex={columnIndex}
                 tasks={selectTasksByColumnId(boardState, column.id)}
                 isTaskTargeted={taskDropPreview?.columnId === column.id}
                 insertionIndex={
@@ -292,7 +295,9 @@ export function BoardView({
                 }
                 onAddTask={onAddTask}
                 onDeleteColumn={boardState.board.columnOrder.length > 1 ? onDeleteColumn : null}
+                onEditColumn={onEditColumn}
                 onEditTask={onEditTask}
+                onDeleteTask={onDeleteTask}
               />
             ))}
           </div>

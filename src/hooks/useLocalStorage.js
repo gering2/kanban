@@ -8,5 +8,10 @@ export function useLocalStorage(key, initialValue) {
     saveToStorage(key, value)
   }, [key, value])
 
-  return [value, setValue]
+  // Support functional updates like React's useState
+  const setValueSafe = (updater) => {
+    setValue((prev) => typeof updater === 'function' ? updater(prev) : updater)
+  }
+
+  return [value, setValueSafe]
 }

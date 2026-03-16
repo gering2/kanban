@@ -1,6 +1,9 @@
 export function selectOrderedColumns(state) {
   return state.board.columnOrder
-    .map((columnId) => state.columns[columnId])
+    .map((columnId) => {
+      const col = state.columns[columnId];
+      return col ? { ...col } : null;
+    })
     .filter(Boolean)
 }
 

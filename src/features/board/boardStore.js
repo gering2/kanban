@@ -6,6 +6,30 @@ function normalizePriority(priority) {
   return TASK_PRIORITIES.includes(priority) ? priority : 'medium'
 }
 
+function normalizeLabels(labels) {
+  if (!Array.isArray(labels)) {
+    return []
+  }
+
+  const seen = new Set()
+
+  return labels
+    .map((label) => String(label).trim())
+    .filter((label) => {
+      if (!label) {
+        return false
+      }
+
+      const key = label.toLowerCase()
+      if (seen.has(key)) {
+        return false
+      }
+
+      seen.add(key)
+      return true
+    })
+}
+
 export function createInitialBoardState() {
   return {
     board: {
@@ -37,6 +61,7 @@ export function createInitialBoardState() {
         description: 'Define entities for board, columns, and tasks.',
         dueDate: null,
         priority: 'high',
+        labels: ['planning', 'backend'],
       },
       'task-2': {
         id: 'task-2',
@@ -44,6 +69,7 @@ export function createInitialBoardState() {
         description: 'Add, edit, delete, and move card actions.',
         dueDate: null,
         priority: 'medium',
+        labels: ['frontend'],
       },
       'task-3': {
         id: 'task-3',
@@ -51,6 +77,7 @@ export function createInitialBoardState() {
         description: 'Switch from Vite starter to feature-first layout.',
         dueDate: new Date().toISOString(),
         priority: 'low',
+        labels: ['infra'],
       },
     },
   }
@@ -67,6 +94,7 @@ export function addTask(state, columnId, taskInput) {
   const description = isStringInput ? '' : (taskInput.description ?? '')
   const dueDate = isStringInput ? null : (taskInput.dueDate || null)
   const priority = normalizePriority(isStringInput ? 'medium' : taskInput.priority)
+  const labels = normalizeLabels(isStringInput ? [] : taskInput.labels)
   const taskId = createId('task')
 
   return {
@@ -79,6 +107,7 @@ export function addTask(state, columnId, taskInput) {
         description,
         dueDate,
         priority,
+        labels,
       },
     },
     columns: {
@@ -141,6 +170,7 @@ export function updateTask(state, taskId, updates) {
         description: updates.description ?? currentTask.description,
         dueDate: updates.dueDate ?? currentTask.dueDate,
         priority: normalizePriority(updates.priority ?? currentTask.priority),
+        labels: normalizeLabels(updates.labels ?? currentTask.labels),
       },
     },
   }
@@ -187,6 +217,24 @@ export function deleteColumn(state, columnId) {
     columns: nextColumns,
     tasks: nextTasks,
   }
+}
+
+export function deleteTask(state, taskId) {
+  if (!state.tasks[taskId]) {
+    return state
+  }
+
+  const nextTasks = { ...state.tasks }
+  delete nextTasks[taskId]
+
+  const nextColumns = Object.fromEntries(
+    Object.entries(state.columns).map(([colId, col]) => [
+      colId,
+      { ...col, taskIds: col.taskIds.filter((id) => id !== taskId) },
+    ]),
+  )
+
+  return { ...state, tasks: nextTasks, columns: nextColumns }
 }
 
 export function moveTask(state, sourceColumnId, targetColumnId, taskId, targetIndex) {
