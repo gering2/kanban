@@ -70,8 +70,8 @@ export function Column({
     }
 
     const clampedIndex = Math.max(0, Math.min(insertionIndex, tasks.length))
-    const firstTask = taskItemRefs.current.get(tasks[0].id)
-    const lastTask = taskItemRefs.current.get(tasks[tasks.length - 1].id)
+    const firstTask = taskItemRefs.current.get(tasks[0]?.id)
+    const lastTask = taskItemRefs.current.get(tasks[tasks.length - 1]?.id)
     const listHeight = taskListRef.current.clientHeight
 
     const clampToListBounds = (top) => {
@@ -183,7 +183,7 @@ export function Column({
           {tasks.length === 0 ? (
             <div className="column-empty-state" role="status" aria-live="polite">
               <p className="column-empty-title">No tasks yet</p>
-              <p className="column-empty-copy">Drop a card here or use Add task to start this lane.</p>
+              <p className="column-empty-copy">Drop a card here or add a new task</p>
             </div>
           ) : null}
         </div>

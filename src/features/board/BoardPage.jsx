@@ -11,9 +11,13 @@ import {
   moveTask,
   updateTask,
 } from './boardStore'
+import { migrateBoardState } from './boardSelectors'
 import { BrandMark } from '../../components/ui/BrandMark'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
+import { BoardSearchBar } from './BoardSearchBar'
+import { BoardLabelFilter } from './BoardLabelFilter'
+import { TaskModalManager } from './TaskModalManager'
 import { DatePicker } from '../../components/ui/DatePicker'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
 import { TaskModal } from '../task/TaskModal'
@@ -262,7 +266,7 @@ export function BoardPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh w-[min(96vw,1760px)] max-w-none flex-col px-3 pb-20 pt-8 sm:px-5">
+    <main className="mx-auto flex min-h-dvh w-[min(96vw,1760px)] max-w-none flex-col px-3  pt-8 sm:px-5">
       <header className="mb-6 flex items-center gap-3">
         <BrandMark />
         <h1 className="page-title">{boardState.board.title}</h1>
@@ -273,33 +277,12 @@ export function BoardPage() {
       </div>
 
       <section className="command-bar mb-5">
-        <div className="command-bar-search">
-          <Input
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Search tasks, descriptions, and labels"
-            aria-label="Search tasks"
-          />
-        </div>
-        <div className="command-bar-labels" role="group" aria-label="Filter tasks by label">
-          <button
-            type="button"
-            className={`label-filter-chip ${activeLabelFilter === 'all' ? 'label-filter-chip-active' : ''}`}
-            onClick={() => setActiveLabelFilter('all')}
-          >
-            All
-          </button>
-          {availableLabels.map((label) => (
-            <button
-              key={label}
-              type="button"
-              className={`label-filter-chip ${activeLabelFilter === label ? 'label-filter-chip-active' : ''}`}
-              onClick={() => setActiveLabelFilter(label)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+        <BoardSearchBar value={searchQuery} onChange={setSearchQuery} />
+        <BoardLabelFilter
+          labels={availableLabels}
+          activeLabel={activeLabelFilter}
+          onChange={setActiveLabelFilter}
+        />
         <p className="command-bar-meta mr-5">
           Showing {visibleTaskCount} of {totalTaskCount} tasks
         </p>
@@ -316,241 +299,22 @@ export function BoardPage() {
         onEditColumn={handleEditColumn}
       />
 
-      <TaskModal
-        isOpen={Boolean(deletingTask)}
-        onClose={handleCloseDeleteTask}
-        title="Delete Task"
-        showCloseButton={false}
-      >
-        <div className="space-y-4">
-          <p className="page-copy max-w-none text-sm">
-            Delete &ldquo;{deletingTask?.title}&rdquo;? This cannot be undone.
-          </p>
-          <div className="flex justify-end gap-3">
-            <button type="button" className="ghost-button" onClick={handleCloseDeleteTask}>
-              Cancel
-            </button>
-            <Button type="button" onClick={handleDeleteTask}>
-              Delete task
-            </Button>
-          </div>
-        </div>
-      </TaskModal>
-
-      <TaskModal
-        isOpen={Boolean(deletingColumn)}
-        onClose={handleCloseDeleteColumn}
-        title="Delete Column"
-        showCloseButton={false}
-      >
-        <div className="space-y-4">
-          <p className="page-copy max-w-none text-sm">
-            Delete {deletingColumn?.title}? All tasks in this column will be removed.
-          </p>
-          <div className="flex justify-end gap-3">
-            <button type="button" className="ghost-button" onClick={handleCloseDeleteColumn}>
-              Cancel
-            </button>
-            <Button type="button" onClick={handleDeleteColumn}>
-              Delete column
-            </Button>
-          </div>
-        </div>
-      </TaskModal>
-
-      <TaskModal
-        isOpen={Boolean(creatingTaskColumnId)}
-        onClose={handleCloseCreateTask}
-        title="New Task"
-      >
-        <form className="space-y-4" onSubmit={handleCreateTask}>
-          <div className="space-y-1.5">
-            <label className="field-label" htmlFor="create-task-title">
-              Title
-            </label>
-            <Input
-              id="create-task-title"
-              value={taskDraft.title}
-              onChange={(event) =>
-                setTaskDraft((currentDraft) => ({
-                  ...currentDraft,
-                  title: event.target.value,
-                }))
-              }
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="field-label" htmlFor="create-task-description">
-              Description
-            </label>
-            <textarea
-              id="create-task-description"
-              className="textarea"
-              value={taskDraft.description}
-              onChange={(event) =>
-                setTaskDraft((currentDraft) => ({
-                  ...currentDraft,
-                  description: event.target.value,
-                }))
-              }
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="field-label" htmlFor="create-task-due-date">
-              Due date
-            </label>
-            <DatePicker
-              value={taskDraft.dueDate}
-              onChange={(dateString) =>
-                setTaskDraft((currentDraft) => ({
-                  ...currentDraft,
-                  dueDate: dateString,
-                }))
-              }
-              placeholder="Pick a due date"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="field-label" htmlFor="create-task-priority">
-              Priority
-            </label>
-            <select
-              id="create-task-priority"
-              className="input"
-              value={taskDraft.priority}
-              onChange={(event) =>
-                setTaskDraft((currentDraft) => ({
-                  ...currentDraft,
-                  priority: event.target.value,
-                }))
-              }
-            >
-              <option value="low">Easy</option>
-              <option value="medium">Med</option>
-              <option value="high">Hard</option>
-            </select>
-          </div>
-          <div className="space-y-1.5">
-            <label className="field-label" htmlFor="create-task-labels">
-              Labels
-            </label>
-            <Input
-              id="create-task-labels"
-              value={taskDraft.labelsText}
-              onChange={(event) =>
-                setTaskDraft((currentDraft) => ({
-                  ...currentDraft,
-                  labelsText: event.target.value,
-                }))
-              }
-              placeholder="frontend, bug, sprint"
-            />
-          </div>
-          <div className="flex justify-end gap-3 pt-2">
-            <button type="button" className="ghost-button" onClick={handleCloseCreateTask}>
-              Cancel
-            </button>
-            <Button type="submit">Create task</Button>
-          </div>
-        </form>
-      </TaskModal>
-
-      <TaskModal
-        isOpen={Boolean(editingTask)}
-        onClose={handleCloseEditTask}
-        title={editingTask ? `Edit ${editingTask.title}` : 'Edit Task'}
-      >
-        <form className="space-y-4" onSubmit={handleSaveTask}>
-          <div className="space-y-1.5">
-            <label className="field-label" htmlFor="task-title">
-              Title
-            </label>
-            <Input
-              id="task-title"
-              value={taskDraft.title}
-              onChange={(event) =>
-                setTaskDraft((currentDraft) => ({
-                  ...currentDraft,
-                  title: event.target.value,
-                }))
-              }
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="field-label" htmlFor="task-description">
-              Description
-            </label>
-            <textarea
-              id="task-description"
-              className="textarea"
-              value={taskDraft.description}
-              onChange={(event) =>
-                setTaskDraft((currentDraft) => ({
-                  ...currentDraft,
-                  description: event.target.value,
-                }))
-              }
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="field-label" htmlFor="task-due-date">
-              Due date
-            </label>
-            <DatePicker
-              value={taskDraft.dueDate}
-              onChange={(dateString) =>
-                setTaskDraft((currentDraft) => ({
-                  ...currentDraft,
-                  dueDate: dateString,
-                }))
-              }
-              placeholder="Pick a due date"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="field-label" htmlFor="task-priority">
-              Priority
-            </label>
-            <select
-              id="task-priority"
-              className="input"
-              value={taskDraft.priority}
-              onChange={(event) =>
-                setTaskDraft((currentDraft) => ({
-                  ...currentDraft,
-                  priority: event.target.value,
-                }))
-              }
-            >
-              <option value="low">Easy</option>
-              <option value="medium">Med</option>
-              <option value="high">Hard</option>
-            </select>
-          </div>
-          <div className="space-y-1.5">
-            <label className="field-label" htmlFor="task-labels">
-              Labels
-            </label>
-            <Input
-              id="task-labels"
-              value={taskDraft.labelsText}
-              onChange={(event) =>
-                setTaskDraft((currentDraft) => ({
-                  ...currentDraft,
-                  labelsText: event.target.value,
-                }))
-              }
-              placeholder="frontend, bug, sprint"
-            />
-          </div>
-          <div className="flex justify-end gap-3 pt-2">
-            <button type="button" className="ghost-button" onClick={handleCloseEditTask}>
-              Cancel
-            </button>
-            <Button type="submit">Save changes</Button>
-          </div>
-        </form>
-      </TaskModal>
+      <TaskModalManager
+        deletingTask={deletingTask}
+        deletingColumn={deletingColumn}
+        creatingTaskColumnId={creatingTaskColumnId}
+        editingTask={editingTask}
+        taskDraft={taskDraft}
+        setTaskDraft={setTaskDraft}
+        handleCloseDeleteTask={handleCloseDeleteTask}
+        handleDeleteTask={handleDeleteTask}
+        handleCloseDeleteColumn={handleCloseDeleteColumn}
+        handleDeleteColumn={handleDeleteColumn}
+        handleCloseCreateTask={handleCloseCreateTask}
+        handleCreateTask={handleCreateTask}
+        handleCloseEditTask={handleCloseEditTask}
+        handleSaveTask={handleSaveTask}
+      />
     </main>
   )
 }
