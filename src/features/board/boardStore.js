@@ -34,7 +34,7 @@ export function createInitialBoardState() {
   return {
     board: {
       id: 'board-1',
-      title: 'Product Sprint Board',
+      title: 'Placeholder Board',
       columnOrder: ['todo', 'current', 'done'],
     },
     columns: {
@@ -57,27 +57,11 @@ export function createInitialBoardState() {
     tasks: {
       'task-1': {
         id: 'task-1',
-        title: 'Map board data model',
-        description: 'Define entities for board, columns, and tasks.',
+        title: 'Task 1',
+        description: 'Placeholder task 1',
         dueDate: null,
         priority: 'high',
-        labels: ['planning', 'backend'],
-      },
-      'task-2': {
-        id: 'task-2',
-        title: 'Draft MVP task actions',
-        description: 'Add, edit, delete, and move card actions.',
-        dueDate: null,
-        priority: 'medium',
-        labels: ['frontend'],
-      },
-      'task-3': {
-        id: 'task-3',
-        title: 'Set up project architecture',
-        description: 'Switch from Vite starter to feature-first layout.',
-        dueDate: new Date().toISOString(),
-        priority: 'low',
-        labels: ['infra'],
+        labels: ['placeholder'],
       },
     },
   }
