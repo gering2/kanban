@@ -7,9 +7,9 @@ export function TaskCard({ task, isOverlay = false }) {
   const priority = task.priority ?? 'medium'
   const taskLabels = Array.isArray(task.labels) ? task.labels : []
   const priorityLabel = {
-    low: 'Easy',
+    low: 'Low',
     medium: 'Med',
-    high: 'Hard',
+    high: 'High',
   }
   const priorityColor = {
     low: '#2e8d44',

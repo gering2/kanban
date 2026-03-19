@@ -226,9 +226,9 @@ export function TaskModalManager({
               }))
             }
           >
-            <option value="low">Easy</option>
+            <option value="low">Low</option>
             <option value="medium">Med</option>
-            <option value="high">Hard</option>
+            <option value="high">High</option>
           </select>
         </div>
         <div className="space-y-1.5">

@@ -21,6 +21,7 @@ import { TaskModalManager } from './TaskModalManager'
 import { DatePicker } from '../../components/ui/DatePicker'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
 import { TaskModal } from '../task/TaskModal'
+import { EditableText } from '../../components/ui/EditableText'
 
 const BOARD_STORAGE_KEY = 'kanban.board.v1'
 
@@ -269,7 +270,18 @@ export function BoardPage() {
     <main className="mx-auto flex min-h-dvh w-[min(96vw,1760px)] max-w-none flex-col px-3  pt-8 sm:px-5">
       <header className="mb-6 flex items-center gap-3">
         <BrandMark />
-        <h1 className="page-title">{boardState.board.title}</h1>
+        <EditableText 
+        onSave={newTitle => setBoardState(prevBoardState => ({
+          ...prevBoardState,
+          board: {
+            ...prevBoardState.board,
+            title: newTitle
+          }
+        }))}
+        value={boardState.board.title}
+        className="page-title"
+        as="h1"
+        />
       </header>
 
       <div className="mb-5">
