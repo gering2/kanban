@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 120" role="img" aria-label="Kanban wordmark logo">
+  <defs>
+    <linearGradient id="inkWord" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5d6540" />
+      <stop offset="1" stop-color="#6f7651" />
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="420" height="120" fill="none" />
+
+  <!-- Wordmark -->
+  <text x="92" y="78" font-family="Noto Sans JP, Segoe UI, sans-serif" font-size="64" font-weight="600" letter-spacing="1.2" fill="url(#inkWord)">
+    Kanban
+  </text>
+
+  <ellipse cx="42" cy="92" rx="18" ry="5.5" fill="#d4e3d3" />
+  <circle cx="42" cy="74" r="13" fill="#efc3d3" />
+  <circle cx="29.5" cy="78" r="10" fill="#f5d4df" />
+  <circle cx="54.5" cy="78" r="10" fill="#f5d4df" />
+  <circle cx="35" cy="66" r="8.5" fill="#f9dfe8" />
+  <circle cx="49" cy="66" r="8.5" fill="#f9dfe8" />
+  <circle cx="42" cy="84.5" r="10.5" fill="#f3d0dc" />
+  <path d="M37.8 92 C37.6 85.4, 38.5 80.2, 40.5 76.2 C38 74.6, 36.6 71.2, 36.7 67.4 C39.2 68.9, 41.2 70.7, 42.8 72.8 C44.3 70.3, 46.4 68.5, 49.3 67.4 C49.1 71.2, 47.7 74.4, 45.3 76.7 C46.9 80.8, 47.6 85.8, 47.4 92 Z" fill="#d8b392" />
+  <circle cx="26.5" cy="76" r="1.6" fill="#cb8ca3" />
+  <circle cx="35.5" cy="63.2" r="1.5" fill="#cb8ca3" />
+  <circle cx="49" cy="63.6" r="1.5" fill="#cb8ca3" />
+  <circle cx="57.5" cy="75" r="1.45" fill="#cb8ca3" />
+</svg>

@@ -11,17 +11,12 @@ import {
   moveTask,
   updateTask,
 } from './boardStore'
-import { migrateBoardState } from './boardSelectors'
 import { BrandMark } from '../../components/ui/BrandMark'
-import { Button } from '../../components/ui/Button'
-import { Input } from '../../components/ui/Input'
 import { BoardSearchBar } from './BoardSearchBar'
 import { BoardLabelFilter } from './BoardLabelFilter'
 import { TaskModalManager } from './TaskModalManager'
-import { DatePicker } from '../../components/ui/DatePicker'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
-import { TaskModal } from '../task/TaskModal'
-import { EditableText } from '../../components/ui/EditableText'
+import { BackgroundArt } from '../../components/ui/BackgroundArt'
 
 const BOARD_STORAGE_KEY = 'kanban.board.v1'
 
@@ -267,38 +262,22 @@ export function BoardPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh w-[min(96vw,1760px)] max-w-none flex-col px-3  pt-8 sm:px-5">
-      <header className="mb-6 flex items-center gap-3">
+    <>
+    <BackgroundArt />
+    <main className="mx-auto flex min-h-dvh w-full max-w-[1360px] flex-col px-4 pt-8 pb-6 sm:px-6 lg:px-8" style={{ position: 'relative', zIndex: 1 }}>
+      <div className="command-bar mb-5">
         <BrandMark />
-        <EditableText 
-        onSave={newTitle => setBoardState(prevBoardState => ({
-          ...prevBoardState,
-          board: {
-            ...prevBoardState.board,
-            title: newTitle
-          }
-        }))}
-        value={boardState.board.title}
-        className="page-title"
-        as="h1"
-        />
-      </header>
-
-      <div className="mb-5">
-        <AddColumnForm onAddColumn={handleAddColumn} />
-      </div>
-
-      <section className="command-bar mb-5">
         <BoardSearchBar value={searchQuery} onChange={setSearchQuery} />
         <BoardLabelFilter
           labels={availableLabels}
           activeLabel={activeLabelFilter}
           onChange={setActiveLabelFilter}
         />
-        <p className="command-bar-meta mr-5">
+        <AddColumnForm onAddColumn={handleAddColumn} />
+        <p className="command-bar-meta">
           Showing {visibleTaskCount} of {totalTaskCount} tasks
         </p>
-      </section>
+      </div>
 
       <BoardView
         boardState={filteredBoardState}
@@ -328,5 +307,6 @@ export function BoardPage() {
         handleSaveTask={handleSaveTask}
       />
     </main>
+    </>
   )
 }

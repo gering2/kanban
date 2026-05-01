@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 120" role="img" aria-label="Kanban horizontal logo">
+  <defs>
+    <radialGradient id="hBadge" cx="50%" cy="34%" r="70%">
+      <stop offset="0%" stop-color="#fffdf8" />
+      <stop offset="100%" stop-color="#f5ede6" />
+    </linearGradient>
+    <linearGradient id="hInk" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5d6540" />
+      <stop offset="1" stop-color="#6f7651" />
+    </linearGradient>
+  </defs>
+
+  <circle cx="60" cy="60" r="48" fill="url(#hBadge)" />
+  <circle cx="60" cy="60" r="48" fill="none" stroke="#d6c4bd" stroke-width="1.9" />
+  <ellipse cx="60" cy="84" rx="25" ry="8.5" fill="#d4e3d3" />
+
+  <circle cx="60" cy="44" r="18" fill="#efc3d3" />
+  <circle cx="43" cy="49" r="14" fill="#f5d4df" />
+  <circle cx="77" cy="49" r="14" fill="#f5d4df" />
+  <circle cx="50" cy="33" r="12" fill="#f9dfe8" />
+  <circle cx="70" cy="33" r="12" fill="#f9dfe8" />
+  <circle cx="60" cy="58" r="15" fill="#f3d0dc" />
+
+  <path d="M53.5 84 C53.3 74.5, 54.6 67.2, 57.4 61.4 C53.8 59, 51.7 54.1, 51.9 48.6 C55.5 50.7, 58.4 53.2, 60.7 56.4 C62.8 52.7, 65.8 50.1, 69.8 48.4 C69.6 53.8, 67.6 58.6, 64.2 61.9 C66.5 67.7, 67.5 75.1, 67.3 84 Z" fill="#d8b392" />
+  <path d="M60.6 57 C63.3 62.2, 64.4 69.8, 63.9 84 L67.3 84 C67.5 75.1, 66.5 67.7, 64.2 61.9 Z" fill="#b78668" />
+
+  <circle cx="37" cy="47" r="2.4" fill="#cb8ca3" />
+  <circle cx="47" cy="30" r="2.1" fill="#cb8ca3" />
+  <circle cx="60" cy="27.5" r="2.2" fill="#cb8ca3" />
+  <circle cx="74" cy="31" r="2.25" fill="#cb8ca3" />
+  <circle cx="83" cy="44" r="2.1" fill="#cb8ca3" />
+  <circle cx="70" cy="57" r="2" fill="#cb8ca3" />
+
+  <!-- Wordmark -->
+  <text x="136" y="77" font-family="Noto Sans JP, Segoe UI, sans-serif" font-size="58" font-weight="600" letter-spacing="1.1" fill="url(#hInk)">
+    Kanban
+  </text>
+</svg>
